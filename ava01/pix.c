@@ -15,6 +15,14 @@
 #define SALDO_INICIAL 100
 #define VALOR_PIX 10
 
+/*
+ * Tempo-base da simulacao em milissegundos. Pode ser alterado aqui ou durante
+ * a compilacao com -DTEMPO_OPERACAO_MS=800, por exemplo.
+ */
+#ifndef TEMPO_OPERACAO_MS
+#define TEMPO_OPERACAO_MS 400
+#endif
+
 typedef enum {
     QUESTAO_1,
     QUESTAO_2,
@@ -150,8 +158,8 @@ static int processar_pix(RequisicaoPix requisicao, int worker) {
     Conta *origem = &contas[requisicao.remetente];
     Conta *destino = &contas[requisicao.destinatario];
 
-    /* Simula a validacao da requisicao antes do acesso a base. */
-    dormir_ms(100);
+    /* A validacao utiliza metade do tempo-base. */
+    dormir_ms(TEMPO_OPERACAO_MS / 2);
 
     if (modo != QUESTAO_1) {
         pthread_mutex_lock(&mutex_base);
@@ -160,7 +168,7 @@ static int processar_pix(RequisicaoPix requisicao, int worker) {
     /* INICIO DA SECAO CRITICA: leitura, calculo e escrita dos saldos. */
     int saldo_origem_lido = origem->saldo;
     int saldo_destino_lido = destino->saldo;
-    dormir_ms(200);
+    dormir_ms(TEMPO_OPERACAO_MS);
 
     if (saldo_origem_lido >= requisicao.valor) {
         origem->saldo = saldo_origem_lido - requisicao.valor;
